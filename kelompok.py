@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, precision_score, recall_score, f1_score
 from sklearn.tree import DecisionTreeClassifier
@@ -32,7 +33,59 @@ x_train, x_temp, y_temp, y_test = train_test_split(
 )
 
 # ===============================================
-# 2. INISIALISASI 3 MODEL DAN LATIH
+# 2. DISTRIBUSI TARGET
+# ===============================================
+
+plt.figure(figsize=(6, 5))
+
+ax = sns.countplot(x="target", data=df)
+
+# Tambahkan label jumlah di atas bar
+for p in ax.patches:
+    ax.annotate(
+        f"{int(p.get_height())}",
+        (p.get_x() + p.get_width() / 2., p.get_height()),
+        ha="center",
+        va="bottom"
+    )
+
+plt.title("Distribusi Target Penyakit Jantung")
+plt.xlabel("Target (0 = Sehat, 1 = Berisiko)")
+plt.ylabel("Jumlah Data")
+plt.tight_layout()
+plt.savefig("distribusi_target.png")
+plt.show()
+
+print("Grafik distribusi target disimpan sebagai 'distribusi_target.png'")
+
+# ===============================================
+# 3. KORELASI FITUR (HEATMAP)
+# ===============================================
+
+plt.figure(figsize=(12, 10))
+
+# Hitung matriks korelasi
+corr_matrix = df.corr()
+
+# Plot heatmap
+sns.heatmap(
+    corr_matrix,
+    annot=True,
+    fmt=".2f",
+    cmap="coolwarm",
+    linewidths=0.5
+)
+
+plt.title("Heatmap Korelasi Antar Fitur Dataset Heart Disease")
+plt.tight_layout()
+plt.savefig("correlation_heatmap.png")
+plt.show()
+
+print("Heatmap korelasi disimpan sebagai 'correlation_heatmap.png'")
+
+
+# ===============================================
+# 4. INISIALISASI 3 MODEL DAN LATIH
 # ===============================================
 models = {
     "Decision Tree": DecisionTreeClassifier(random_state=42),
@@ -87,7 +140,7 @@ for nama, model in models.items():
     roc_data[nama] = (fpr, tpr, auc)
 
 # ===============================================
-# 3. PILIH MODEL TERBAIK DAN SIMPAN
+# 5. PILIH MODEL TERBAIK DAN SIMPAN
 # ===============================================
 df_hasil = pd.DataFrame(hasil)[[
     "Model", "Accuracy", "Precision", "Recall", "F1-Score", "AUC",
@@ -106,13 +159,13 @@ joblib.dump(list(X.columns), "feature_names.pkl")
 print("Model terbaik disimpan ke 'kelompok.pkl'")
 
 # ===============================================
-# 4. SIMPAN HASIL KE EXCEL
+# 6. SIMPAN HASIL KE EXCEL
 # ===============================================
 df_hasil.to_excel("hasil_perbandingan.xlsx", index=False)
 print("Hasil evaluasi disimpan ke 'hasil_perbandingan.xlsx'")
 
 # ===============================================
-# 5. PLOT DAN SIMPAN ROC CURVE
+# 7. PLOT DAN SIMPAN ROC CURVE
 # ===============================================
 plt.figure(figsize=(8, 6))
 for nama, (fpr, tpr, auc) in roc_data.items():
@@ -131,7 +184,7 @@ plt.show()
 print("\nGrafik ROC Curve disimpan sebagai 'roc_curve.png'")
 
 # ===============================================
-# 6. CONTOH PREDIKSI MENGGUNAKAN MODEL
+# 8. CONTOH PREDIKSI MENGGUNAKAN MODEL
 # ===============================================
 print("\n=== Contoh Prediksi Menggunakan Model ===")
 mdl = joblib.load("kelompok.pkl")
@@ -196,7 +249,7 @@ print(f"\nPrediksi: {pred} ({'Berisiko penyakit jantung' if pred==1 else 'Sehat'
 print(f"Probabilitas risiko: {prob*100:.2f}%")
 
 # ===============================================
-# 7. HITUNG TP, TN, FP, FN DARI MODEL DAN DATASET ASLI
+# 9. HITUNG TP, TN, FP, FN DARI MODEL DAN DATASET ASLI
 # ===============================================
 print("\n=== Hasil TP, TN, FP, FN ===")
 
